@@ -16,6 +16,10 @@ export default function CaptionsScreen() {
   const [playing, setPlaying] = useState(true);
   const [syncOffset, setSyncOffset] = useState(0);
 
+  const handleJumpTo = (time: number) => {
+    setCurrentTime(time);
+  };
+
   // Find current caption index
   const currentIndex = captions.findIndex(
     (c) =>
@@ -62,7 +66,11 @@ export default function CaptionsScreen() {
 
       {/* Captions */}
       <View style={{ flex: 1 }}>
-        <CaptionsLyrics captions={captions} currentIndex={currentIndex} />
+        <CaptionsLyrics
+          captions={captions}
+          currentIndex={currentIndex}
+          onJumpTo={handleJumpTo}
+        />
       </View>
 
       {/* Player */}

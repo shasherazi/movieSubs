@@ -1,6 +1,6 @@
-// components/CaptionsPlayer.tsx
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
 
 type CaptionsPlayerProps = {
   currentTime: number;
@@ -12,8 +12,14 @@ type CaptionsPlayerProps = {
 
 function msToTime(ms: number) {
   const totalSeconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
+  if (hours > 0) {
+    return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
+  }
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
@@ -25,7 +31,7 @@ export default function CaptionsPlayer({
   onSync,
 }: CaptionsPlayerProps) {
   return (
-    <View>
+    <View style={styles.container}>
       <View style={styles.progressBarContainer}>
         <Text style={styles.timeText}>{msToTime(currentTime)}</Text>
         <View style={styles.progressBarBg}>
@@ -38,7 +44,9 @@ export default function CaptionsPlayer({
             ]}
           />
         </View>
-        <Text style={styles.timeText}>{msToTime(totalDuration)}</Text>
+        <Text style={[styles.timeText, { marginLeft: 4 }]}>
+          {msToTime(totalDuration)}
+        </Text>
       </View>
       <View style={styles.controls}>
         <TouchableOpacity
@@ -53,7 +61,11 @@ export default function CaptionsPlayer({
           style={styles.playPauseButton}
           accessibilityLabel={playing ? "Pause" : "Play"}
         >
-          <Text style={styles.playPauseText}>{playing ? "⏸" : "▶️"}</Text>
+          <MaterialIcons
+            name={playing ? "pause" : "play-arrow"}
+            size={32}
+            color="#fff"
+          />
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => onSync(1000)}
@@ -68,11 +80,15 @@ export default function CaptionsPlayer({
 }
 
 const styles = StyleSheet.create({
+  container: {
+    marginBottom: 16,
+  },
   progressBarContainer: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
     marginBottom: 8,
+    paddingTop: 8,
   },
   progressBarBg: {
     flex: 1,
@@ -90,7 +106,7 @@ const styles = StyleSheet.create({
   timeText: {
     color: "#ccc",
     fontSize: 14,
-    width: 40,
+    width: 56,
     textAlign: "center",
   },
   controls: {
@@ -106,11 +122,6 @@ const styles = StyleSheet.create({
     padding: 18,
     marginHorizontal: 16,
     elevation: 2,
-  },
-  playPauseText: {
-    color: "#fff",
-    fontSize: 28,
-    fontWeight: "bold",
   },
   syncButton: {
     backgroundColor: "#333",

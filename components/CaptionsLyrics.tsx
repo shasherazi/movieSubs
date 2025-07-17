@@ -1,15 +1,17 @@
 import React, { useRef, useEffect } from "react";
-import { FlatList, Text, StyleSheet, View } from "react-native";
+import { FlatList, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Caption } from "../utils/parseSRT";
 
 type CaptionsLyricsProps = {
   captions: Caption[];
   currentIndex: number;
+  onJumpTo: (time: number) => void;
 };
 
 export default function CaptionsLyrics({
   captions,
   currentIndex,
+  onJumpTo,
 }: CaptionsLyricsProps) {
   const listRef = useRef<FlatList>(null);
 
@@ -46,7 +48,11 @@ export default function CaptionsLyrics({
       data={captions}
       keyExtractor={(item: Caption) => item.id.toString()}
       renderItem={({ item, index }) => (
-        <View style={styles.captionContainer}>
+        <TouchableOpacity
+          onPress={() => onJumpTo(item.start)}
+          activeOpacity={0.7}
+          style={styles.captionContainer}
+        >
           <Text
             style={[
               styles.caption,
@@ -57,12 +63,11 @@ export default function CaptionsLyrics({
           >
             {item.text.trim()}
           </Text>
-        </View>
+        </TouchableOpacity>
       )}
       showsVerticalScrollIndicator={false}
       style={{ flex: 1 }}
       contentContainerStyle={styles.scrollContent}
-      scrollEnabled={false}
       onScrollToIndexFailed={handleScrollToIndexFailed}
       initialScrollIndex={currentIndex}
     />
