@@ -54,11 +54,11 @@ export default function CaptionsPlayer({
       </View>
       <View style={styles.controls}>
         <TouchableOpacity
-          onPress={() => onSync(-1000)}
+          onPress={() => onSync(-50)}
           style={styles.syncButton}
-          accessibilityLabel="Sync back 1 second"
+          accessibilityLabel="Sync back 50 milliseconds"
         >
-          <Text style={styles.syncText}>–1s</Text>
+          <Text style={styles.syncText}>–50ms</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={onPlayPause}
@@ -72,11 +72,11 @@ export default function CaptionsPlayer({
           />
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => onSync(1000)}
+          onPress={() => onSync(50)}
           style={styles.syncButton}
-          accessibilityLabel="Sync forward 1 second"
+          accessibilityLabel="Sync forward 50 milliseconds"
         >
-          <Text style={styles.syncText}>+1s</Text>
+          <Text style={styles.syncText}>+50ms</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
-    marginBottom: 8,
+    marginBottom: 12,
     paddingTop: 8,
   },
   timeText: {
