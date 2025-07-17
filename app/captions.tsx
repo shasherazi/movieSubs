@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { View, Text, StyleSheet, Pressable } from "react-native";
+import * as Haptics from "expo-haptics";
 import { parseSRT, Caption } from "../utils/parseSRT";
 import CaptionsLyrics from "../components/CaptionsLyrics";
 import CaptionsPlayer from "../components/CaptionsPlayer";
@@ -17,6 +18,12 @@ export default function CaptionsScreen() {
   const [syncOffset, setSyncOffset] = useState(0);
 
   const handleJumpTo = (time: number) => {
+    Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Virtual_Key);
+    setCurrentTime(time);
+  };
+
+  const handleSeek = (time: number) => {
+    Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Drag_Start);
     setCurrentTime(time);
   };
 
@@ -39,8 +46,14 @@ export default function CaptionsScreen() {
   const totalDuration = captions.length ? captions[captions.length - 1].end : 1;
 
   // Controls
-  const handlePlayPause = () => setPlaying((p) => !p);
-  const handleSync = (ms: number) => setSyncOffset((o) => o + ms);
+  const handlePlayPause = () => {
+    Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Virtual_Key);
+    setPlaying((p) => !p);
+  };
+  const handleSync = (ms: number) => {
+    Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Virtual_Key);
+    setSyncOffset((o) => o + ms);
+  };
 
   // Back button
   const router = useRouter();
@@ -80,6 +93,7 @@ export default function CaptionsScreen() {
         playing={playing}
         onPlayPause={handlePlayPause}
         onSync={handleSync}
+        onSeek={handleSeek}
       />
     </View>
   );

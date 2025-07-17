@@ -1,6 +1,8 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import Slider from "@react-native-community/slider";
+import * as Haptics from "expo-haptics";
 
 type CaptionsPlayerProps = {
   currentTime: number;
@@ -8,6 +10,7 @@ type CaptionsPlayerProps = {
   playing: boolean;
   onPlayPause: () => void;
   onSync: (ms: number) => void;
+  onSeek: (ms: number) => void;
 };
 
 function msToTime(ms: number) {
@@ -29,21 +32,22 @@ export default function CaptionsPlayer({
   playing,
   onPlayPause,
   onSync,
+  onSeek,
 }: CaptionsPlayerProps) {
   return (
     <View style={styles.container}>
       <View style={styles.progressBarContainer}>
         <Text style={styles.timeText}>{msToTime(currentTime)}</Text>
-        <View style={styles.progressBarBg}>
-          <View
-            style={[
-              styles.progressBar,
-              {
-                width: `${Math.min((currentTime / totalDuration) * 100, 100)}%`,
-              },
-            ]}
-          />
-        </View>
+        <Slider
+          style={{ flex: 1, marginHorizontal: 8 }}
+          minimumValue={0}
+          maximumValue={totalDuration}
+          value={currentTime}
+          minimumTrackTintColor="#1DB954"
+          maximumTrackTintColor="#333"
+          thumbTintColor="#1DB954"
+          onSlidingComplete={onSeek}
+        />
         <Text style={[styles.timeText, { marginLeft: 4 }]}>
           {msToTime(totalDuration)}
         </Text>
@@ -89,19 +93,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 8,
     paddingTop: 8,
-  },
-  progressBarBg: {
-    flex: 1,
-    height: 6,
-    backgroundColor: "#333",
-    borderRadius: 3,
-    marginHorizontal: 8,
-    overflow: "hidden",
-  },
-  progressBar: {
-    height: 6,
-    backgroundColor: "#1DB954",
-    borderRadius: 3,
   },
   timeText: {
     color: "#ccc",
