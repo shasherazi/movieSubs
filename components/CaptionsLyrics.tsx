@@ -77,7 +77,8 @@ export default function CaptionsLyrics({
 const styles = StyleSheet.create({
   scrollContent: {
     paddingVertical: 32,
-    alignItems: "center",
+    paddingLeft: 20,
+    alignItems: "flex-start",
   },
   captionContainer: {
     padding: 8,
