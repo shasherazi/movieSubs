@@ -4,7 +4,7 @@ This app enables users to load external SRT subtitle files and display them in a
 
 ## How to Use
 
-Download the app from the [Releases](https://github.com/shasherazi/movieSubs/releases/tag/v1.0.0) page. The app is only available for Android devices because I don't own an Apple device (open PR for iOS development).
+Download the app from the [Releases](https://github.com/shasherazi/movieSubs/releases) page. The app is only available for Android devices because I don't own an Apple device (open PR for iOS development).
 
 After downloading and installing the app, follow these steps:
 
