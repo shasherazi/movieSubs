@@ -13,18 +13,24 @@ export default function CaptionsScreen() {
   const filename = params.filename || "Subtitles.srt";
   const captions: Caption[] = parseSRT(srt);
 
-  const [currentTime, setCurrentTime] = useState(0);
   const [playing, setPlaying] = useState(true);
+  const [startTimestamp, setStartTimestamp] = useState(Date.now());
+  const [pausedOffset, setPausedOffset] = useState(0);
   const [syncOffset, setSyncOffset] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
 
   const handleJumpTo = (time: number) => {
     Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Virtual_Key);
-    setCurrentTime(time);
+    setPausedOffset(time);
+    setStartTimestamp(Date.now());
+    setCurrentTime(time + syncOffset);
   };
 
-  const handleSeek = (time: number) => {
+  const handleSeek = (ms: number) => {
     Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Drag_Start);
-    setCurrentTime(time);
+    setPausedOffset(ms);
+    setStartTimestamp(Date.now());
+    setCurrentTime(ms + syncOffset);
   };
 
   // Find current caption index
@@ -35,12 +41,25 @@ export default function CaptionsScreen() {
 
   // Timer: 50ms interval for smoothness
   useEffect(() => {
-    if (!playing) return;
-    const interval = setInterval(() => {
-      setCurrentTime((t) => t + 50);
-    }, 50);
-    return () => clearInterval(interval);
-  }, [playing]);
+    let animationFrame: number;
+
+    const update = () => {
+      if (playing) {
+        setCurrentTime(Date.now() - startTimestamp + pausedOffset + syncOffset);
+        animationFrame = requestAnimationFrame(update);
+      }
+    };
+
+    if (playing) {
+      animationFrame = requestAnimationFrame(update);
+    } else {
+      setCurrentTime(pausedOffset + syncOffset);
+    }
+
+    return () => {
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+    };
+  }, [playing, startTimestamp, pausedOffset, syncOffset]);
 
   // Progress bar
   const totalDuration = captions.length ? captions[captions.length - 1].end : 1;
@@ -48,11 +67,20 @@ export default function CaptionsScreen() {
   // Controls
   const handlePlayPause = () => {
     Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Virtual_Key);
-    setPlaying((p) => !p);
+    if (playing) {
+      // Pausing: update pausedOffset
+      setPausedOffset((prev) => prev + (Date.now() - startTimestamp));
+      setPlaying(false);
+    } else {
+      // Resuming: set new startTimestamp
+      setStartTimestamp(Date.now());
+      setPlaying(true);
+    }
   };
+
   const handleSync = (ms: number) => {
     Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Virtual_Key);
-    setSyncOffset((o) => o + ms);
+    setSyncOffset((prev) => prev + ms);
   };
 
   // Back button
