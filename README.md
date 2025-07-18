@@ -10,9 +10,9 @@ After downloading and installing the app, follow these steps:
 
 1. Download the SRT subtitle file for the movie you want to watch.
 2. Open the app and select the SRT file from your device.
-![Select SRT File](./1.jpg)
+<img src="./1.jpg" alt="drawing" width="200"/>
 3. Select the SRT file you want to load.
-![Select SRT File](./2.jpg)
+<img src="./2.jpg" alt="drawing" width="200"/>
 4. The app will display the subtitles in a large, readable format.
-![Subtitles Display](./3.jpg)
+<img src="./3.jpg" alt="drawing" width="200"/>
 5. Profit!
