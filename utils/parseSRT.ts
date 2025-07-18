@@ -18,15 +18,35 @@ function timeToMs(time: string) {
 }
 
 export function parseSRT(srt: string): Caption[] {
-  return srt
-    .split(/\n{2,}/)
-    .map((block) => {
-      const lines = block.split("\n").filter(Boolean);
-      if (lines.length < 3) return null;
-      const id = parseInt(lines[0]);
-      const [start, end] = lines[1].split(" --> ").map(timeToMs);
-      const text = lines.slice(2).join("\n");
-      return { id, start, end, text };
-    })
-    .filter(Boolean) as Caption[];
+  const blocks = srt.replace(/\r/g, "").split(/\n{2,}/);
+  const captions: Caption[] = [];
+  let idCounter = 0;
+
+  for (const block of blocks) {
+    const lines = block.split("\n").filter(Boolean);
+
+    if (lines.length === 0) continue;
+
+    // Find the timestamp line (should contain -->)
+    let timeLineIdx = lines.findIndex((l) => l.includes("-->"));
+    if (timeLineIdx === -1) continue;
+
+    // Try to parse the previous line as an index, otherwise auto-increment
+    let id = idCounter;
+    if (timeLineIdx > 0 && /^\d+$/.test(lines[timeLineIdx - 1].trim())) {
+      id = parseInt(lines[timeLineIdx - 1].trim(), 10);
+    }
+    idCounter++;
+
+    // Parse times
+    const [start, end] = lines[timeLineIdx].split(" --> ").map(timeToMs);
+
+    // All lines after the timestamp are text
+    const textLines = lines.slice(timeLineIdx + 1);
+    const text = textLines.join("\n").replace(/<[^>]+>/g, ""); // Remove HTML tags
+
+    captions.push({ id, start, end, text });
+  }
+
+  return captions;
 }
