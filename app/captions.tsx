@@ -1,7 +1,6 @@
-// app/captions.tsx
 import React, { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import { View, Text, StyleSheet, Pressable, Dimensions } from "react-native";
 import * as Haptics from "expo-haptics";
 import { parseSRT, Caption } from "../utils/parseSRT";
 import CaptionsLyrics from "../components/CaptionsLyrics";
@@ -13,24 +12,70 @@ export default function CaptionsScreen() {
   const filename = params.filename || "Subtitles.srt";
   const captions: Caption[] = parseSRT(srt);
 
+  // Real-time timer state (as previously discussed)
   const [playing, setPlaying] = useState(true);
   const [startTimestamp, setStartTimestamp] = useState(Date.now());
   const [pausedOffset, setPausedOffset] = useState(0);
   const [syncOffset, setSyncOffset] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
 
-  const handleJumpTo = (time: number) => {
-    Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Virtual_Key);
-    setPausedOffset(time);
-    setStartTimestamp(Date.now());
-    setCurrentTime(time + syncOffset);
-  };
+  // Orientation detection
+  const [isLandscape, setIsLandscape] = useState(false);
+  useEffect(() => {
+    const updateOrientation = () => {
+      const { width, height } = Dimensions.get("window");
+      setIsLandscape(width > height);
+    };
+    updateOrientation();
+    const sub = Dimensions.addEventListener("change", updateOrientation);
+    return () => sub.remove();
+  }, []);
 
+  // Real-time timer effect
+  useEffect(() => {
+    let animationFrame: number;
+    const update = () => {
+      if (playing) {
+        setCurrentTime(Date.now() - startTimestamp + pausedOffset + syncOffset);
+        animationFrame = requestAnimationFrame(update);
+      }
+    };
+    if (playing) {
+      animationFrame = requestAnimationFrame(update);
+    } else {
+      setCurrentTime(pausedOffset + syncOffset);
+    }
+    return () => {
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+    };
+  }, [playing, startTimestamp, pausedOffset, syncOffset]);
+
+  // Handlers
+  const handlePlayPause = () => {
+    Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Virtual_Key);
+    if (playing) {
+      setPausedOffset((prev) => prev + (Date.now() - startTimestamp));
+      setPlaying(false);
+    } else {
+      setStartTimestamp(Date.now());
+      setPlaying(true);
+    }
+  };
   const handleSeek = (ms: number) => {
     Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Drag_Start);
     setPausedOffset(ms);
     setStartTimestamp(Date.now());
     setCurrentTime(ms + syncOffset);
+  };
+  const handleSync = (ms: number) => {
+    Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Virtual_Key);
+    setSyncOffset((prev) => prev + ms);
+  };
+  const handleJumpTo = (time: number) => {
+    Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Virtual_Key);
+    setPausedOffset(time);
+    setStartTimestamp(Date.now());
+    setCurrentTime(time + syncOffset);
   };
 
   // Find current caption index
@@ -39,49 +84,8 @@ export default function CaptionsScreen() {
       currentTime + syncOffset >= c.start && currentTime + syncOffset <= c.end,
   );
 
-  // Timer: 50ms interval for smoothness
-  useEffect(() => {
-    let animationFrame: number;
-
-    const update = () => {
-      if (playing) {
-        setCurrentTime(Date.now() - startTimestamp + pausedOffset + syncOffset);
-        animationFrame = requestAnimationFrame(update);
-      }
-    };
-
-    if (playing) {
-      animationFrame = requestAnimationFrame(update);
-    } else {
-      setCurrentTime(pausedOffset + syncOffset);
-    }
-
-    return () => {
-      if (animationFrame) cancelAnimationFrame(animationFrame);
-    };
-  }, [playing, startTimestamp, pausedOffset, syncOffset]);
-
   // Progress bar
   const totalDuration = captions.length ? captions[captions.length - 1].end : 1;
-
-  // Controls
-  const handlePlayPause = () => {
-    Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Virtual_Key);
-    if (playing) {
-      // Pausing: update pausedOffset
-      setPausedOffset((prev) => prev + (Date.now() - startTimestamp));
-      setPlaying(false);
-    } else {
-      // Resuming: set new startTimestamp
-      setStartTimestamp(Date.now());
-      setPlaying(true);
-    }
-  };
-
-  const handleSync = (ms: number) => {
-    Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Virtual_Key);
-    setSyncOffset((prev) => prev + ms);
-  };
 
   // Back button
   const router = useRouter();
@@ -105,24 +109,59 @@ export default function CaptionsScreen() {
         </View>
       </View>
 
-      {/* Captions */}
-      <View style={{ flex: 1 }}>
-        <CaptionsLyrics
-          captions={captions}
-          currentIndex={currentIndex}
-          onJumpTo={handleJumpTo}
-        />
-      </View>
-
-      {/* Player */}
-      <CaptionsPlayer
-        currentTime={currentTime}
-        totalDuration={totalDuration}
-        playing={playing}
-        onPlayPause={handlePlayPause}
-        onSync={handleSync}
-        onSeek={handleSeek}
-      />
+      {isLandscape ? (
+        <>
+          <View style={styles.landscapeContainer}>
+            <View style={styles.landscapeCaptions}>
+              <CaptionsLyrics
+                captions={captions}
+                currentIndex={currentIndex}
+                onJumpTo={handleJumpTo}
+              />
+            </View>
+            <View style={styles.landscapePlayer}>
+              <CaptionsPlayer
+                currentTime={currentTime}
+                totalDuration={totalDuration}
+                playing={playing}
+                onPlayPause={handlePlayPause}
+                onSync={handleSync}
+                onSeek={handleSeek}
+                vertical
+              />
+            </View>
+          </View>
+          <View style={styles.landscapeProgressBar}>
+            <CaptionsPlayer
+              currentTime={currentTime}
+              totalDuration={totalDuration}
+              playing={playing}
+              onPlayPause={() => {}}
+              onSync={() => {}}
+              onSeek={handleSeek}
+              onlyProgressBar
+            />
+          </View>
+        </>
+      ) : (
+        <>
+          <View style={{ flex: 1 }}>
+            <CaptionsLyrics
+              captions={captions}
+              currentIndex={currentIndex}
+              onJumpTo={handleJumpTo}
+            />
+          </View>
+          <CaptionsPlayer
+            currentTime={currentTime}
+            totalDuration={totalDuration}
+            playing={playing}
+            onPlayPause={handlePlayPause}
+            onSync={handleSync}
+            onSeek={handleSeek}
+          />
+        </>
+      )}
     </View>
   );
 }
@@ -163,10 +202,30 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 40,
   },
-  movieTitle: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "bold",
+  landscapeContainer: {
     flex: 1,
+    flexDirection: "row",
+  },
+  landscapeCaptions: {
+    flex: 2,
+    justifyContent: "center",
+    alignItems: "stretch",
+    paddingRight: 8,
+    paddingLeft: 32,
+  },
+  landscapePlayer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingLeft: 8,
+  },
+  landscapeProgressBar: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    backgroundColor: "#181818",
   },
 });
