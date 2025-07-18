@@ -1,6 +1,6 @@
 # Movie Subtitles
 
-This app enables users to load external SRT subtitle files and display them in a large, readable, and stylish format, similar to Spotify's lyrics view. The main goal is to provide real-time captions for movies in cinemas where closed captions are not available, making the movie-going experience more accessible.
+This app empowers deaf and hard-of-hearing users, as well as anyone who needs accessible subtitles, to load external SRT subtitle files and display them in a large, readable, and visually appealing format inspired by Spotify's lyrics view. Designed for real-time movie captioning in cinemas where closed captions are not available, this app enhances accessibility and inclusivity, making the movie-going experience enjoyable for everyone.
 
 ## How to Use
 
